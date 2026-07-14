@@ -26,11 +26,11 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
         <a href="#" className="flex items-center">
           <Image
-            src="/logo.svg"
+            src="/logo.jpg"
             alt="Jejak"
-            width={140}
-            height={56}
-            className="h-12 w-auto"
+            width={120}
+            height={120}
+            className="h-14 w-auto"
             priority
           />
         </a>

@@ -78,7 +78,7 @@ export default function RootLayout({
     description:
       "Souvenir unik 3D cetak dari rute lari, gowes, dan mendaki. Plakat, terrain map, dan gantungan kunci dari data GPS asli.",
     url: siteUrl,
-    logo: `${siteUrl}/logo.svg`,
+    logo: `${siteUrl}/logo.jpg`,
     image: `${siteUrl}/products/plaque.jpeg`,
     priceRange: "$$",
     acceptsPayments: true,
