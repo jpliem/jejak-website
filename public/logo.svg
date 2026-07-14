@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" fill="none">
+  <!-- Route line with mountain and arrow -->
+  <path d="M10 68 C25 68, 30 48, 42 48 C50 48, 52 58, 58 58 C64 58, 62 38, 70 32 L82 22" stroke="#2C2420" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Mountain peak -->
+  <path d="M62 38 L66 30 L70 38" stroke="#2C2420" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Arrow head -->
+  <path d="M76 22 L82 22 L82 28" stroke="#2C2420" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M78 18 L82 22" stroke="#2C2420" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- jejak text -->
+  <text x="60" y="82" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" font-weight="500" letter-spacing="1" fill="#2C2420">jejak</text>
+</svg>
