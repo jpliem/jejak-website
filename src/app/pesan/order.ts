@@ -104,46 +104,56 @@ export const hasFrame = (o: Order) => o.product !== "ganci" && o.frame !== "none
 
 // Photos of Jejak's own pieces, in public/pesan/. Customer pieces only with the customer's OK.
 // ai: an AI-made scene built from a real piece (files named AI_*); the page tags it "ilustrasi".
-export type Photo = { src: string; alt: string; ai: boolean };
-const photo = (file: string, alt: string, ai = false): Photo => ({ src: `/pesan/${file}.jpg`, alt, ai });
+// pick: what tapping the photo sets. Colours are the nearest of the 11: the red pieces as Merah Marun and
+// the green terrains as Hijau Zaitun (neither is an exact match), two-tone F04 and T05 by their main colour.
+// The WhatsApp text names the photo, so Jejak still sees the exact piece.
+export type Photo = { src: string; alt: string; ai: boolean; pick: Partial<Order> };
+const photo = (file: string, alt: string, pick: Partial<Order>, ai = false): Photo => ({ src: `/pesan/${file}.jpg`, alt, ai, pick });
+const piece = (product: ProductId, shape: ShapeId, base: ColorId, route: ColorId): Partial<Order> => ({ product, shape, base, route });
+const redHex = piece("terrain", "hexagon", "marun", "pink"); // T07, F23
+const greenTerrain = piece("terrain", "rect", "zaitun", "kuning"); // F01, F24
+const f24 = photo("F24_frame-kayu-terrain-hijau-dan-slot-foto", "Frame kayu berisi terrain hijau dan slot foto", { ...greenTerrain, frame: "frame_photo", frameColor: "natural" });
 const PHOTOS: Record<string, Photo[]> = {
   "terrain-rect": [
-    photo("F03_terrain-cokelat-oranye", "Terrain kotak cokelat, rute oranye"),
-    photo("F01_terrain-hijau-oranye-di-tangan", "Terrain kotak hijau, rute oranye, di tangan"),
+    photo("F03_terrain-cokelat-oranye", "Terrain kotak cokelat, rute oranye", piece("terrain", "rect", "cokelat", "oranye")),
+    photo("F01_terrain-hijau-oranye-di-tangan", "Terrain kotak hijau, rute kuning, di tangan", greenTerrain),
   ],
   "terrain-hexagon": [
-    photo("F04_hex-terrain-cokelat-hitam-oranye", "Terrain hexagon cokelat dan hitam, rute oranye"),
-    photo("T07_hex-plakat-merah-morning-trail", "Terrain hexagon merah, Morning Trail"),
-    photo("T09_hex-plakat-krem-gravel-ride", "Terrain hexagon krem, rute hitam"),
+    photo("F04_hex-terrain-cokelat-hitam-oranye", "Terrain hexagon cokelat dan hitam, rute oranye", piece("terrain", "hexagon", "cokelat", "oranye")),
+    photo("T07_hex-plakat-merah-morning-trail", "Terrain hexagon merah, rute pink, Morning Trail", redHex),
+    photo("T09_hex-plakat-krem-gravel-ride", "Terrain hexagon krem, rute hitam", piece("terrain", "hexagon", "bone", "hitam")),
   ],
   "terrain-circle": [
-    photo("T05_terrain-bulat-biru-hijau-rute-oranye", "Terrain bulat biru dan hijau, rute oranye"),
-    photo("T06_terrain-bulat-hijau-tua-rute-oranye", "Terrain bulat hijau tua, rute oranye"),
+    photo("T05_terrain-bulat-biru-hijau-rute-oranye", "Terrain bulat biru dan hijau, rute oranye", piece("terrain", "circle", "birutua", "oranye")),
+    photo("T06_terrain-bulat-hijau-tua-rute-oranye", "Terrain bulat hijau tua, rute oranye", piece("terrain", "circle", "zaitun", "oranye")),
   ],
   "plakat-rect": [
-    photo("F06_plakat-hitam-oranye", "Plakat kotak hitam, rute oranye"),
-    photo("F07_plakat-merah-rute-hitam", "Plakat kotak merah, rute hitam"),
-    photo("F08_plakat-zaitun-rute-putih", "Plakat kotak hijau zaitun, rute putih"),
+    photo("F06_plakat-hitam-oranye", "Plakat kotak hitam, rute oranye", piece("plakat", "rect", "hitam", "oranye")),
+    photo("F07_plakat-merah-rute-hitam", "Plakat kotak merah, rute hitam", piece("plakat", "rect", "marun", "hitam")),
+    photo("F08_plakat-zaitun-rute-putih", "Plakat kotak hijau zaitun, rute putih", piece("plakat", "rect", "zaitun", "bone")),
   ],
-  "plakat-circle": [photo("F10_plakat-bulat-pink", "Plakat bulat pink")],
+  "plakat-circle": [photo("F10_plakat-bulat-pink", "Plakat bulat pink, rute hitam", piece("plakat", "circle", "pink", "hitam"))],
   ganci: [
-    photo("F12_gantungan-kunci-cokelat", "Gantungan kunci cokelat"),
-    photo("F13_gantungan-kunci-putih-bone", "Gantungan kunci putih bone"),
+    photo("F12_gantungan-kunci-cokelat", "Gantungan kunci cokelat, rute abu-abu", piece("ganci", "rect", "cokelat", "abu")),
+    photo("F13_gantungan-kunci-putih-bone", "Gantungan kunci putih bone, rute abu-abu", piece("ganci", "rect", "bone", "abu")),
   ],
   // Frame photos: "<product>-<frame>" first, else "<frame>".
   frame: [
-    photo("AI_frame-hexagon-merah-di-rak", "Ilustrasi: frame kayu berisi terrain hexagon merah di rak", true),
-    photo("F23_frame-kayu-hexagon-merah", "Frame kayu berisi terrain hexagon merah"),
+    photo("AI_frame-hexagon-merah-di-rak", "Ilustrasi: frame kayu berisi terrain hexagon merah di rak", { ...redHex, frame: "frame", frameColor: "natural" }, true),
+    photo("F23_frame-kayu-hexagon-merah", "Frame kayu berisi terrain hexagon merah", { ...redHex, frame: "frame", frameColor: "natural" }),
   ],
   "terrain-frame_photo": [
-    photo("AI_frame-terrain-hijau-foto-gunung", "Ilustrasi: frame kayu berisi terrain hijau dan foto gunung", true),
-    photo("F24_frame-kayu-terrain-hijau-dan-slot-foto", "Frame kayu berisi terrain hijau dan slot foto"),
+    photo("AI_frame-terrain-hijau-foto-gunung", "Ilustrasi: frame kayu berisi terrain hijau dan foto gunung", f24.pick, true),
+    f24,
   ],
   "plakat-frame_photo": [
-    photo("AI_frame-plakat-merah-foto-hutan", "Ilustrasi: frame kayu berisi plakat merah dan foto hutan", true),
-    photo("F24_frame-kayu-terrain-hijau-dan-slot-foto", "Frame kayu berisi terrain hijau dan slot foto"),
+    photo("AI_frame-plakat-merah-foto-hutan", "Ilustrasi: frame kayu berisi plakat merah dan foto hutan", { ...piece("plakat", "rect", "marun", "hitam"), frame: "frame_photo", frameColor: "natural" }, true),
+    f24,
   ],
 };
+
+/** True while every pick the photo set is still chosen. */
+export const matches = (p: Photo, o: Order) => Object.entries(p.pick).every(([k, v]) => o[k as keyof Order] === v);
 
 /** Up to 3 real photos for the current pick: the frame first, then the piece. Empty when there is none yet. */
 export function examples(o: Order) {
@@ -170,7 +180,8 @@ export function quote(o: Order): Quote {
   };
 }
 
-export function waLink(o: Order): string {
+/** from: the example photo the customer tapped; named in the text while its picks still hold. */
+export function waLink(o: Order, from?: Photo | null): string {
   const p = PRODUCTS[o.product];
   const q = quote(o);
   const rows = [
@@ -180,6 +191,7 @@ export function waLink(o: Order): string {
     shapeOf(o) && `- Bentuk: ${SHAPES[shapeOf(o)!]}`,
     `- Warna: base ${COLORS[o.base].name}, rute ${COLORS[o.route].name}`,
     hasFrame(o) && `- Frame: ${FRAMES[o.frame].name}, warna ${FRAME_COLORS[o.frameColor].name}`,
+    from && matches(from, o) && `- Seperti contoh: ${from.alt}`,
     `Estimasi: ${rupiah(q.total)}${q.pending ? " + harga frame (mohon info)" : ""}`,
     hasFrame(o) && o.frame === "frame_photo"
       ? "Rute (GPX/Strava) dan fotonya saya kirim di chat ini ya."

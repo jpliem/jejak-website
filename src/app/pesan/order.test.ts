@@ -2,10 +2,25 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { quote, waLink, rupiah, examples, ids, DEFAULT_ORDER, type Order } from "./order";
+import { quote, waLink, rupiah, examples, ids, DEFAULT_ORDER, type Order, type Photo } from "./order";
 
 const o = (patch: Partial<Order>): Order => ({ ...DEFAULT_ORDER, ...patch });
-const waText = (order: Order) => decodeURIComponent(waLink(order).split("?text=")[1]);
+const waText = (order: Order, from?: Photo) => decodeURIComponent(waLink(order, from).split("?text=")[1]);
+
+test("tapping a photo picks that piece; the order names the photo until a pick changes", () => {
+  for (const product of ids.products)
+    for (const shape of ids.shapes)
+      for (const frame of ids.frames)
+        for (const p of examples(o({ product, shape, frame }))) {
+          const picked = { ...o({ product, shape, frame }), ...p.pick };
+          assert.ok(examples(picked).some((x) => x.src === p.src), `${p.src} drops out of the strip once tapped`);
+          assert.ok(waText(picked, p).includes(`- Seperti contoh: ${p.alt}`), p.src);
+        }
+  const f07 = examples(o({ product: "plakat", shape: "rect" })).find((p) => p.src.includes("/F07_"))!;
+  const picked = o(f07.pick);
+  assert.deepEqual([picked.product, picked.base, picked.route], ["plakat", "marun", "hitam"]);
+  assert.doesNotMatch(waText({ ...picked, route: "kuning" }, f07), /Seperti contoh/);
+});
 
 test("rupiah uses Indonesian thousands dots", () => {
   assert.equal(rupiah(135000), "Rp 135.000");

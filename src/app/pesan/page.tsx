@@ -7,16 +7,18 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   COLORS, DEFAULT_ORDER, FRAMES, FRAME_COLORS, PRODUCTS, SHAPES, SHAPES_FOR, SIZES,
-  examples, hasFrame, ids, quote, rupiah, shapeOf, waLink,
+  examples, hasFrame, ids, matches, quote, rupiah, shapeOf, waLink,
   type Order, type Photo, type ShapeId, type SizeId,
 } from "./order";
 
 export default function PesanPage() {
   const [order, setOrder] = useState<Order>(DEFAULT_ORDER);
   const pick = <K extends keyof Order>(k: K) => (v: Order[K]) => setOrder((o) => ({ ...o, [k]: v }));
+  const [tapped, setTapped] = useState<Photo | null>(null);
+  const from = tapped && matches(tapped, order) ? tapped : null; // dropped once the customer changes one of its picks
   const q = quote(order);
   const isCard = order.product === "ganci";
-  const link = waLink(order);
+  const link = waLink(order, from);
   const shape = shapeOf(order);
   let step = 0;
 
@@ -40,7 +42,11 @@ export default function PesanPage() {
           <aside className="contents lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:block lg:space-y-4 lg:self-start">
             <div className="order-1 overflow-hidden rounded-2xl border border-sand/60 bg-cream-dark">
               <Preview order={order} />
-              <Examples photos={examples(order)} />
+              <Examples
+                photos={examples(order)}
+                chosen={from}
+                onPick={(p) => { setOrder((o) => ({ ...o, ...p.pick })); setTapped(p); }}
+              />
             </div>
             <div className="order-3 rounded-2xl border border-sand/60 bg-warm-white p-6">
               <ul className="space-y-2 text-sm">
@@ -304,21 +310,26 @@ function Preview({ order }: { order: Order }) {
   );
 }
 
-// Real photos under the sketch. They show shape and finish; colours are whatever that piece was printed in.
-function Examples({ photos }: { photos: Photo[] }) {
+// Real photos under the sketch. Tapping one sets the picks to that piece (`pick` in order.ts).
+function Examples({ photos, chosen, onPick }: { photos: Photo[]; chosen: Photo | null; onPick: (p: Photo) => void }) {
   if (!photos.length) return null;
   return (
     <div className="border-t border-sand/60 bg-warm-white px-5 py-3">
       <p className="mb-2 text-xs text-bark-light/70">
-        <span className="font-medium uppercase tracking-wider text-bark-light">{photos.some((p) => p.ai) ? "Contoh" : "Contoh hasil asli"}</span> · warnanya bisa beda dari pilihan kamu
+        <span className="font-medium uppercase tracking-wider text-bark-light">{photos.some((p) => p.ai) ? "Contoh" : "Contoh hasil asli"}</span> · ketuk foto untuk pilih yang sama
       </p>
       <ul className="grid grid-cols-3 gap-2">
         {photos.map((p) => (
           <li key={p.src}>
-            <a href={p.src} target="_blank" rel="noopener noreferrer" className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-cream-dark">
+            <button
+              type="button"
+              onClick={() => onPick(p)}
+              aria-pressed={p.src === chosen?.src}
+              className={`relative block aspect-[4/3] w-full overflow-hidden rounded-lg bg-cream-dark ring-pine ring-offset-2 ring-offset-warm-white ${p.src === chosen?.src ? "ring-2" : ""}`}
+            >
               <Image src={p.src} alt={p.alt} fill sizes="(min-width: 1024px) 120px, 33vw" className="object-cover transition-transform duration-300 hover:scale-105" />
               {p.ai && <span className="absolute left-1.5 top-1.5 rounded-full bg-bark/75 px-2 py-0.5 text-[10px] font-medium text-warm-white">ilustrasi</span>}
-            </a>
+            </button>
           </li>
         ))}
       </ul>
