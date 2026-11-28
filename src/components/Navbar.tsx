@@ -26,7 +26,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
         <a href="#" className="flex items-center">
           <Image
-            src="/logo.jpg"
+            src="/logo.png"
             alt="Jejak"
             width={120}
             height={120}
@@ -49,9 +49,7 @@ export default function Navbar() {
           </a>
           <LanguageToggle />
           <a
-            href="https://wa.me/6281234567890?text=Hi%20Jejak!%20I%27d%20like%20to%20order%20a%20route%20keepsake."
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/pesan"
             className="inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-medium text-warm-white transition-all hover:bg-terracotta-dark hover:shadow-lg hover:shadow-terracotta/20 active:scale-[0.97]"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
