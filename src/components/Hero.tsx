@@ -56,9 +56,7 @@ export default function Hero() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href="https://wa.me/6281234567890?text=Hi%20Jejak!%20I%27d%20like%20to%20order%20a%20route%20keepsake."
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/pesan"
             className="inline-flex items-center gap-2.5 rounded-full bg-terracotta px-8 py-4 text-base font-medium text-warm-white transition-all hover:bg-terracotta-dark hover:shadow-xl hover:shadow-terracotta/20 active:scale-[0.97]"
           >
             {t("heroCta")}

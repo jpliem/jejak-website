@@ -98,6 +98,14 @@ export default function HowItWorks() {
                   <p className="text-base sm:text-lg text-bark-light/70 leading-relaxed max-w-lg">
                     {t(step.descKey)}
                   </p>
+                  {i === 0 && (
+                    <a
+                      href="/pesan"
+                      className="mt-5 inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-warm-white transition-all hover:bg-terracotta-dark hover:shadow-lg hover:shadow-terracotta/20 active:scale-[0.97]"
+                    >
+                      {t("step1Cta")} →
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

@@ -34,7 +34,7 @@ export default function Footer() {
 
         <div className="border-t border-cream/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Image src="/logo.jpg" alt="Jejak" width={40} height={40} className="h-8 w-auto rounded" />
+            <Image src="/logo.png" alt="Jejak" width={40} height={40} className="h-8 w-auto brightness-0 invert" />
             <span className="text-xs text-cream/30">&copy; {new Date().getFullYear()}</span>
           </div>
           <p className="text-xs text-cream/30">{t("footerMade")}</p>
