@@ -44,6 +44,14 @@ export default function Products() {
       accent: "bg-sage",
     },
     {
+      nameKey: "puzzleName" as const,
+      taglineKey: "puzzleTagline" as const,
+      descKey: "puzzleDesc" as const,
+      details: [t("puzzleDetail1"), t("puzzleDetail2"), t("puzzleDetail3")],
+      image: "/pesan/P01_puzzle-hexagon-hitam-oranye.jpg",
+      accent: "bg-terracotta",
+    },
+    {
       nameKey: "keychainName" as const,
       taglineKey: "keychainTagline" as const,
       descKey: "keychainDesc" as const,
@@ -69,18 +77,18 @@ export default function Products() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {products.map((product, i) => (
             <div
               key={product.nameKey}
-              className={`reveal reveal-delay-${i + 1} group relative rounded-2xl bg-warm-white border border-sand/60 overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-bark/[0.04] hover:-translate-y-1`}
+              className={`reveal reveal-delay-${(i % 2) + 1} group relative rounded-2xl bg-warm-white border border-sand/60 overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-bark/[0.04] hover:-translate-y-1`}
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-sand-light">
                 <Image
                   src={product.image}
                   alt={t(product.nameKey)}
                   fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
