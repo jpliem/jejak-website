@@ -46,6 +46,14 @@ test("frame saja has no price yet, so the total is pending", () => {
   assert.match(waText(o({ product: "plakat", size: "L", frame: "frame" })), /harga frame/i);
 });
 
+test("puzzle: S/M/L prices, kotak only, frames priced as usual, no example photos yet", () => {
+  assert.equal(quote(o({ product: "puzzle", size: "S" })).total, 300000);
+  assert.equal(quote(o({ product: "puzzle", size: "M" })).total, 350000);
+  assert.equal(quote(o({ product: "puzzle", size: "L", frame: "frame_photo" })).total, 500000);
+  assert.match(waText(o({ product: "puzzle", shape: "hexagon" })), /Produk: Puzzle \(Puzzle Rute 3D\)\n- Ukuran: M \(12×12 cm\)\n- Bentuk: Kotak/);
+  for (const frame of ids.frames) assert.deepEqual(examples(o({ product: "puzzle", frame })), []);
+});
+
 test("keychain ignores leftover size, shape and frame picks", () => {
   const order = o({ product: "ganci", size: "L", shape: "hexagon", frame: "frame_photo" });
   const q = quote(order);

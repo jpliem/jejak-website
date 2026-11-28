@@ -8,6 +8,7 @@ const keys = <T extends object>(o: T) => Object.keys(o) as (keyof T)[];
 export const PRODUCTS = {
   terrain: { name: "Terrain", desc: "Topografi 3D", note: "Bukit dan lembah rute kamu, timbul", price: { S: 230000, M: 285000, L: 350000 } },
   plakat: { name: "Plakat", desc: "Plakat Rute 3D", note: "Rute timbul di atas peta jalan", price: { S: 135000, M: 175000, L: 220000 } },
+  puzzle: { name: "Puzzle", desc: "Puzzle Rute 3D", note: "Rute kamu dipotong jadi kepingan puzzle", price: { S: 300000, M: 350000, L: 400000 } },
   ganci: { name: "Gantungan Kunci", desc: "Kartu rute 8,5×5,4 cm", note: "Model kartu, muat di saku", price: 85000 },
 } as const;
 
@@ -88,10 +89,11 @@ export const DEFAULT_ORDER: Order = {
   frameColor: "natural",
 };
 
-// Terrain: the shapes it has been made in (photos T05–T07, F04). Keychain is always the card.
+// Terrain: the shapes it has been made in (photos T05–T07, F04). Puzzle: kotak only for now. Keychain is always the card.
 export const SHAPES_FOR: Record<ProductId, readonly ShapeId[]> = {
   terrain: ["rect", "hexagon", "circle"],
   plakat: ids.shapes,
+  puzzle: ["rect"],
   ganci: [],
 };
 
@@ -112,6 +114,10 @@ const photo = (file: string, alt: string, pick: Partial<Order>, ai = false): Pho
 const piece = (product: ProductId, shape: ShapeId, base: ColorId, route: ColorId): Partial<Order> => ({ product, shape, base, route });
 const redHex = piece("terrain", "hexagon", "marun", "pink"); // T07, F23
 const greenTerrain = piece("terrain", "rect", "zaitun", "kuning"); // F01, F24
+const redFrames = [
+  photo("AI_frame-hexagon-merah-di-rak", "Ilustrasi: frame kayu berisi terrain hexagon merah di rak", { ...redHex, frame: "frame", frameColor: "natural" }, true),
+  photo("F23_frame-kayu-hexagon-merah", "Frame kayu berisi terrain hexagon merah", { ...redHex, frame: "frame", frameColor: "natural" }),
+];
 const f24 = photo("F24_frame-kayu-terrain-hijau-dan-slot-foto", "Frame kayu berisi terrain hijau dan slot foto", { ...greenTerrain, frame: "frame_photo", frameColor: "natural" });
 const PHOTOS: Record<string, Photo[]> = {
   "terrain-rect": [
@@ -137,11 +143,9 @@ const PHOTOS: Record<string, Photo[]> = {
     photo("F12_gantungan-kunci-cokelat", "Gantungan kunci cokelat, rute abu-abu", piece("ganci", "rect", "cokelat", "abu")),
     photo("F13_gantungan-kunci-putih-bone", "Gantungan kunci putih bone, rute abu-abu", piece("ganci", "rect", "bone", "abu")),
   ],
-  // Frame photos: "<product>-<frame>" first, else "<frame>".
-  frame: [
-    photo("AI_frame-hexagon-merah-di-rak", "Ilustrasi: frame kayu berisi terrain hexagon merah di rak", { ...redHex, frame: "frame", frameColor: "natural" }, true),
-    photo("F23_frame-kayu-hexagon-merah", "Frame kayu berisi terrain hexagon merah", { ...redHex, frame: "frame", frameColor: "natural" }),
-  ],
+  // Frame photos, "<product>-<frame>". No puzzle photos yet, so a puzzle shows none.
+  "terrain-frame": redFrames,
+  "plakat-frame": redFrames,
   "terrain-frame_photo": [
     photo("AI_frame-terrain-hijau-foto-gunung", "Ilustrasi: frame kayu berisi terrain hijau dan foto gunung", f24.pick, true),
     f24,
@@ -159,7 +163,7 @@ export const matches = (p: Photo, o: Order) => Object.entries(p.pick).every(([k,
 export function examples(o: Order) {
   const shape = shapeOf(o);
   const piece = PHOTOS[shape ? `${o.product}-${shape}` : o.product] ?? [];
-  const frame = hasFrame(o) ? PHOTOS[`${o.product}-${o.frame}`] ?? PHOTOS[o.frame] : [];
+  const frame = hasFrame(o) ? PHOTOS[`${o.product}-${o.frame}`] ?? [] : [];
   return [...frame, ...piece].slice(0, 3);
 }
 

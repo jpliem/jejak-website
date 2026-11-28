@@ -67,6 +67,9 @@ export default function PesanPage() {
               <p className="mt-2 text-xs leading-relaxed text-bark-light/70">
                 {q.pending && "Harga frame dikonfirmasi di chat. "}Harga akhir tergantung rute, kami konfirmasi dulu sebelum cetak.
               </p>
+              <p className="mt-3 rounded-xl bg-pine/10 px-4 py-3 text-sm text-bark">
+                Pesan banyak, misalnya buat komunitas atau event? Ada harga spesial, tanya aja di chat.
+              </p>
               <WaButton href={link} className="mt-6 hidden w-full justify-center lg:inline-flex">
                 Pesan via WhatsApp
               </WaButton>
@@ -78,7 +81,7 @@ export default function PesanPage() {
 
           <div className="order-2 space-y-12 lg:col-start-1 lg:row-start-1">
             <Step n={++step} title="Produk">
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {ids.products.map((id) => {
                   const p = PRODUCTS[id];
                   const from = typeof p.price === "number" ? p.price : p.price.S;
@@ -97,7 +100,7 @@ export default function PesanPage() {
               </div>
             </Step>
 
-            {shape && (
+            {shape && SHAPES_FOR[order.product].length > 1 && (
               <Step n={++step} title="Bentuk" hint={SHAPES[shape]}>
                 <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
                   {SHAPES_FOR[order.product].map((id) => (
@@ -366,6 +369,7 @@ function Piece({ order, base, route, cx, cy, size }: { order: Order; base: strin
       <g clipPath={`url(#${clip})`}>
         {order.product === "terrain" && <Contours cx={cx} cy={cy} size={size} base={base} />}
         {order.product === "plakat" && <Streets cx={cx} cy={cy} size={size} base={base} />}
+        {order.product === "puzzle" && <Jigsaw cx={cx} cy={cy} size={size} base={base} />}
         {/* keychain hole: top left, as on the real cards (F13) */}
         {isCard && <circle cx={cx - w / 2 + w * 0.09} cy={cy - h / 2 + w * 0.09} r={w * 0.035} fill={mix(base, "#000000", 0.35)} />}
         <polyline points={routePts} fill="none" stroke={route} strokeWidth={lineW} strokeLinejoin="round" strokeLinecap="round" />
@@ -405,6 +409,21 @@ function Streets({ cx, cy, size, base }: { cx: number; cy: number; size: number;
       ))}
     </g>
   );
+}
+
+function Jigsaw({ cx, cy, size, base }: { cx: number; cy: number; size: number; base: string }) {
+  // puzzle: 3×3 cut lines, a knob on every inner edge, alternating sides
+  const n = 3, s = size / n, x0 = cx - size / 2, y0 = cy - size / 2, r = s * 0.13, k = r * 0.8;
+  let d = "";
+  for (let i = 1; i < n; i++)
+    for (let j = 0; j < n; j++) {
+      const flip = (i + j) % 2;
+      const x = x0 + i * s, y = y0 + j * s + s / 2; // vertical cut, row j
+      d += `M${x} ${y - s / 2}V${y - k}A${r} ${r} 0 1 ${flip} ${x} ${y + k}V${y + s / 2}`;
+      const hx = x0 + j * s + s / 2, hy = y0 + i * s; // horizontal cut, column j
+      d += `M${hx - s / 2} ${hy}H${hx - k}A${r} ${r} 0 1 ${flip} ${hx + k} ${hy}H${hx + s / 2}`;
+    }
+  return <path d={d} fill="none" stroke={mix(base, "#000000", 0.3)} strokeWidth={Math.max(1.2, size * 0.008)} />;
 }
 
 function FrameBox({ x, y, w, h, hex }: { x: number; y: number; w: number; h: number; hex: string }) {
