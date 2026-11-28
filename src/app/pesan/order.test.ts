@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { quote, waLink, rupiah, examples, ids, DEFAULT_ORDER, type Order, type Photo } from "./order";
+import { quote, waLink, rupiah, examples, ids, SHAPES, DEFAULT_ORDER, type Order, type Photo } from "./order";
 
 const o = (patch: Partial<Order>): Order => ({ ...DEFAULT_ORDER, ...patch });
 const waText = (order: Order, from?: Photo) => decodeURIComponent(waLink(order, from).split("?text=")[1]);
@@ -30,28 +30,29 @@ test("rupiah uses Indonesian thousands dots", () => {
 test("terrain M, no frame", () => {
   const q = quote(o({ product: "terrain", size: "M", frame: "none" }));
   assert.equal(q.total, 285000);
-  assert.equal(q.pending, false);
 });
 
 test("plakat S hexagon with frame + foto adds 100.000", () => {
   const q = quote(o({ product: "plakat", size: "S", shape: "hexagon", frame: "frame_photo" }));
   assert.equal(q.total, 235000);
-  assert.equal(q.pending, false);
 });
 
-test("frame saja has no price yet, so the total is pending", () => {
-  const q = quote(o({ product: "plakat", size: "L", frame: "frame" }));
-  assert.equal(q.total, 220000);
-  assert.equal(q.pending, true);
-  assert.match(waText(o({ product: "plakat", size: "L", frame: "frame" })), /harga frame/i);
+test("frame saja adds 85.000", () => {
+  const order = o({ product: "plakat", size: "L", frame: "frame" });
+  assert.equal(quote(order).total, 305000);
+  assert.match(waText(order), /- Frame: Frame saja, warna Kayu natural\n/);
+  assert.match(waText(order), /\nEstimasi: Rp 305\.000 \(belum termasuk ongkir\)\n/);
 });
 
-test("puzzle: S/M/L prices, kotak only, frames priced as usual, no example photos yet", () => {
+test("puzzle: S/M/L prices, frames priced as usual, one hexagon photo", () => {
   assert.equal(quote(o({ product: "puzzle", size: "S" })).total, 300000);
   assert.equal(quote(o({ product: "puzzle", size: "M" })).total, 350000);
   assert.equal(quote(o({ product: "puzzle", size: "L", frame: "frame_photo" })).total, 500000);
-  assert.match(waText(o({ product: "puzzle", shape: "hexagon" })), /Produk: Puzzle \(Puzzle Rute 3D\)\n- Ukuran: M \(12×12 cm\)\n- Bentuk: Kotak/);
-  for (const frame of ids.frames) assert.deepEqual(examples(o({ product: "puzzle", frame })), []);
+  assert.match(waText(o({ product: "puzzle", shape: "hexagon" })), /Produk: Puzzle \(Puzzle Rute 3D\)\n- Ukuran: M \(12×12 cm\)\n- Bentuk: Hexagon/);
+  for (const frame of ids.frames) {
+    assert.deepEqual(examples(o({ product: "puzzle", frame })), []); // kotak: no photo
+    assert.deepEqual(examples(o({ product: "puzzle", shape: "hexagon", frame })).map((p) => p.src), ["/pesan/P01_puzzle-hexagon-hitam-oranye.jpg"]);
+  }
 });
 
 test("keychain ignores leftover size, shape and frame picks", () => {
@@ -64,10 +65,9 @@ test("keychain ignores leftover size, shape and frame picks", () => {
   assert.match(waText(o({ product: "ganci", base: "kuning", route: "birutua" })), /Warna: base Kuning, rute Biru Tua/);
 });
 
-test("terrain comes in kotak, hexagon and bulat; a plakat-only shape falls back to kotak", () => {
-  assert.match(waText(o({ product: "terrain", shape: "hexagon" })), /Bentuk: Hexagon/);
-  assert.match(waText(o({ product: "terrain", shape: "circle" })), /Bentuk: Bulat/);
-  assert.match(waText(o({ product: "terrain", shape: "triangle" })), /Bentuk: Kotak/);
+test("terrain, plakat and puzzle offer every shape", () => {
+  for (const product of ["terrain", "plakat", "puzzle"] as const)
+    for (const shape of ids.shapes) assert.ok(waText(o({ product, shape })).includes(`- Bentuk: ${SHAPES[shape]}\n`), `${product} ${shape}`);
   assert.equal(quote(o({ product: "terrain", size: "M", shape: "hexagon" })).total, 285000); // same price as kotak
 });
 
@@ -94,4 +94,8 @@ test("whatsapp link goes to Jejak's number with the order typed out", () => {
   for (const part of ["Plakat", "M (12×12 cm)", "Bulat", "Hitam", "Oranye", "Frame + foto", "Oak", "Rp 275.000"]) {
     assert.ok(text.includes(part), `missing "${part}" in:\n${text}`);
   }
+  assert.doesNotMatch(text, /Judul|Stats/); // left empty: no rows
+  assert.match(text, /belum termasuk ongkir\)\n.*alamat kirim/); // shipping is quoted per address
+  const named = waText({ ...order, title: " Morning Trail ", stats: "162 KM · 3025 M" });
+  assert.match(named, /- Warna: base Hitam, rute Oranye\n- Judul: Morning Trail\n- Stats: 162 KM · 3025 M\n/);
 });

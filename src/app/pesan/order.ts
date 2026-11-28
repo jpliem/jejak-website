@@ -14,7 +14,7 @@ export const PRODUCTS = {
 
 export const SIZES = { S: "10×10 cm", M: "12×12 cm", L: "15×15 cm" } as const;
 
-// Same shapes route3d can cut (baseShape). Which product offers which: SHAPES_FOR below.
+// Same shapes route3d can cut (baseShape). Terrain, plakat and puzzle offer all of them; the keychain is always the card.
 export const SHAPES = {
   rect: "Kotak",
   rounded: "Rounded",
@@ -39,10 +39,9 @@ export const COLORS = {
   zaitun: { name: "Hijau Zaitun", hex: "#6B7041" }, // ponytail: placeholder hex, none on record; swap in the real spool colour
 } as const;
 
-// price null = not set yet; the page and the chat message say it is confirmed in chat.
 export const FRAMES = {
   none: { name: "Tanpa frame", price: 0 },
-  frame: { name: "Frame saja", price: null },
+  frame: { name: "Frame saja", price: 85000 },
   frame_photo: { name: "Frame + foto", price: 100000 },
 } as const;
 
@@ -77,6 +76,8 @@ export type Order = {
   route: ColorId;
   frame: FrameId;
   frameColor: FrameColorId;
+  title: string; // printed on the piece; empty = none
+  stats: string;
 };
 
 export const DEFAULT_ORDER: Order = {
@@ -87,20 +88,13 @@ export const DEFAULT_ORDER: Order = {
   route: "oranye",
   frame: "none",
   frameColor: "natural",
-};
-
-// Terrain: the shapes it has been made in (photos T05–T07, F04). Puzzle: kotak only for now. Keychain is always the card.
-export const SHAPES_FOR: Record<ProductId, readonly ShapeId[]> = {
-  terrain: ["rect", "hexagon", "circle"],
-  plakat: ids.shapes,
-  puzzle: ["rect"],
-  ganci: [],
+  title: "",
+  stats: "",
 };
 
 // Which picks apply to the chosen product. Leftover picks from another product are kept but ignored.
-/** The shape that gets cut, or null for the keychain. A shape the product doesn't offer falls back to Kotak. */
-export const shapeOf = (o: Order): ShapeId | null =>
-  o.product === "ganci" ? null : SHAPES_FOR[o.product].includes(o.shape) ? o.shape : "rect";
+/** The shape that gets cut, or null for the keychain. */
+export const shapeOf = (o: Order): ShapeId | null => (o.product === "ganci" ? null : o.shape);
 export const hasSize = (o: Order) => o.product !== "ganci";
 export const hasFrame = (o: Order) => o.product !== "ganci" && o.frame !== "none";
 
@@ -139,11 +133,14 @@ const PHOTOS: Record<string, Photo[]> = {
     photo("F08_plakat-zaitun-rute-putih", "Plakat kotak hijau zaitun, rute putih", piece("plakat", "rect", "zaitun", "bone")),
   ],
   "plakat-circle": [photo("F10_plakat-bulat-pink", "Plakat bulat pink, rute hitam", piece("plakat", "circle", "pink", "hitam"))],
+  "puzzle-hexagon": [
+    photo("P01_puzzle-hexagon-hitam-oranye", "Puzzle hexagon hitam di alas cokelat, rute oranye", piece("puzzle", "hexagon", "hitam", "oranye")),
+  ],
   ganci: [
     photo("F12_gantungan-kunci-cokelat", "Gantungan kunci cokelat, rute abu-abu", piece("ganci", "rect", "cokelat", "abu")),
     photo("F13_gantungan-kunci-putih-bone", "Gantungan kunci putih bone, rute abu-abu", piece("ganci", "rect", "bone", "abu")),
   ],
-  // Frame photos, "<product>-<frame>". No puzzle photos yet, so a puzzle shows none.
+  // Frame photos, "<product>-<frame>". No framed puzzle photo yet, so a framed puzzle shows only the puzzle.
   "terrain-frame": redFrames,
   "plakat-frame": redFrames,
   "terrain-frame_photo": [
@@ -169,7 +166,7 @@ export function examples(o: Order) {
 
 export const rupiah = (n: number) => "Rp " + n.toLocaleString("id-ID");
 
-export type Quote = { lines: { label: string; amount: number | null }[]; total: number; pending: boolean };
+export type Quote = { lines: { label: string; amount: number }[]; total: number };
 
 export function quote(o: Order): Quote {
   const p = PRODUCTS[o.product];
@@ -177,11 +174,7 @@ export function quote(o: Order): Quote {
   if (typeof p.price === "number") lines.push({ label: `${p.name} (${p.desc})`, amount: p.price });
   else lines.push({ label: `${p.name} ${o.size} (${SIZES[o.size]})`, amount: p.price[o.size] });
   if (hasFrame(o)) lines.push({ label: `${FRAMES[o.frame].name}, ${FRAME_COLORS[o.frameColor].name}`, amount: FRAMES[o.frame].price });
-  return {
-    lines,
-    total: lines.reduce((sum, l) => sum + (l.amount ?? 0), 0),
-    pending: lines.some((l) => l.amount === null),
-  };
+  return { lines, total: lines.reduce((sum, l) => sum + l.amount, 0) };
 }
 
 /** from: the example photo the customer tapped; named in the text while its picks still hold. */
@@ -194,12 +187,14 @@ export function waLink(o: Order, from?: Photo | null): string {
     hasSize(o) && `- Ukuran: ${o.size} (${SIZES[o.size]})`,
     shapeOf(o) && `- Bentuk: ${SHAPES[shapeOf(o)!]}`,
     `- Warna: base ${COLORS[o.base].name}, rute ${COLORS[o.route].name}`,
+    o.title.trim() && `- Judul: ${o.title.trim()}`,
+    o.stats.trim() && `- Stats: ${o.stats.trim()}`,
     hasFrame(o) && `- Frame: ${FRAMES[o.frame].name}, warna ${FRAME_COLORS[o.frameColor].name}`,
     from && matches(from, o) && `- Seperti contoh: ${from.alt}`,
-    `Estimasi: ${rupiah(q.total)}${q.pending ? " + harga frame (mohon info)" : ""}`,
+    `Estimasi: ${rupiah(q.total)} (belum termasuk ongkir)`,
     hasFrame(o) && o.frame === "frame_photo"
-      ? "Rute (GPX/Strava) dan fotonya saya kirim di chat ini ya."
-      : "Rute (GPX/Strava) saya kirim di chat ini ya.",
+      ? "Rute (GPX/Strava), foto, dan alamat kirimnya saya kirim di chat ini ya."
+      : "Rute (GPX/Strava) dan alamat kirimnya saya kirim di chat ini ya.",
   ];
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(rows.filter(Boolean).join("\n"))}`;
 }

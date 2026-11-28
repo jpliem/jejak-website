@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
-  COLORS, DEFAULT_ORDER, FRAMES, FRAME_COLORS, PRODUCTS, SHAPES, SHAPES_FOR, SIZES,
+  COLORS, DEFAULT_ORDER, FRAMES, FRAME_COLORS, PRODUCTS, SHAPES, SIZES,
   examples, hasFrame, ids, matches, quote, rupiah, shapeOf, waLink,
   type Order, type Photo, type ShapeId, type SizeId,
 } from "./order";
@@ -53,7 +53,7 @@ export default function PesanPage() {
                 {q.lines.map((l) => (
                   <li key={l.label} className="flex justify-between gap-4">
                     <span className="text-bark-light">{l.label}</span>
-                    <span className="shrink-0 font-medium text-bark">{l.amount === null ? "via chat" : rupiah(l.amount)}</span>
+                    <span className="shrink-0 font-medium text-bark">{rupiah(l.amount)}</span>
                   </li>
                 ))}
               </ul>
@@ -61,11 +61,12 @@ export default function PesanPage() {
                 <span className="text-sm font-medium uppercase tracking-wider text-bark-light">Estimasi</span>
                 <span className="font-heading text-2xl text-bark">
                   {rupiah(q.total)}
-                  {q.pending && <span className="text-sm text-bark-light"> + frame</span>}
+                  <span className="text-sm text-bark-light"> + ongkir</span>
                 </span>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-bark-light/70">
-                {q.pending && "Harga frame dikonfirmasi di chat. "}Harga akhir tergantung rute, kami konfirmasi dulu sebelum cetak.
+                Belum termasuk ongkir, kami cek dulu sesuai alamat kamu. Harga akhir tergantung rute, kami konfirmasi dulu sebelum cetak.
+                Pengerjaan 3–5 hari setelah transfer.
               </p>
               <p className="mt-3 rounded-xl bg-pine/10 px-4 py-3 text-sm text-bark">
                 Pesan banyak, misalnya buat komunitas atau event? Ada harga spesial, tanya aja di chat.
@@ -100,10 +101,10 @@ export default function PesanPage() {
               </div>
             </Step>
 
-            {shape && SHAPES_FOR[order.product].length > 1 && (
+            {shape && (
               <Step n={++step} title="Bentuk" hint={SHAPES[shape]}>
                 <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
-                  {SHAPES_FOR[order.product].map((id) => (
+                  {ids.shapes.map((id) => (
                     <Choice key={id} name="shape" value={id} checked={shape === id} onPick={pick("shape")} className="flex flex-col items-center gap-2 p-3">
                       <svg viewBox="0 0 40 40" className="h-9 w-9 text-bark" aria-hidden="true">
                         <path d={shapePath(id, 20, 20, 30)} fill="currentColor" />
@@ -146,6 +147,24 @@ export default function PesanPage() {
               </div>
             </Step>
 
+            <Step n={++step} title="Tulisan" hint="Opsional, dicetak di piece-nya. Kosongkan kalau nggak mau ada tulisan.">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {([["title", "Judul", "Morning Trail", 30], ["stats", "Stats", "162 KM · 3025 M", 40]] as const).map(([k, label, example, max]) => (
+                  <label key={k} className="block">
+                    <span className="mb-2 block text-sm text-bark-light">{label}</span>
+                    <input
+                      type="text"
+                      value={order[k]}
+                      onChange={(e) => pick(k)(e.target.value)}
+                      placeholder={example}
+                      maxLength={max}
+                      className="w-full rounded-xl border border-sand/60 bg-warm-white px-4 py-3 text-base text-bark placeholder:text-bark-light/40 focus:border-pine focus:outline-none focus:ring-1 focus:ring-pine"
+                    />
+                  </label>
+                ))}
+              </div>
+            </Step>
+
             {!isCard && (
               <Step n={++step} title="Frame" hint="Siap gantung di dinding. Frame + foto: rute dan foto kamu dalam satu bingkai.">
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -155,7 +174,7 @@ export default function PesanPage() {
                       <Choice key={id} name="frame" value={id} checked={order.frame === id} onPick={pick("frame")} className="p-4">
                         <span className="block font-medium text-bark">{f.name}</span>
                         <span className="block text-sm text-pine">
-                          {f.price === null ? "harga via chat" : f.price === 0 ? "—" : `+${rupiah(f.price)}`}
+                          {f.price === 0 ? "—" : `+${rupiah(f.price)}`}
                         </span>
                       </Choice>
                     );
@@ -189,7 +208,7 @@ export default function PesanPage() {
             <span className="block text-xs uppercase tracking-wider text-bark-light/70">Estimasi</span>
             <span className="font-heading text-lg text-bark">
               {rupiah(q.total)}
-              {q.pending && <span className="text-xs text-bark-light"> + frame</span>}
+              <span className="text-xs text-bark-light"> + ongkir</span>
             </span>
           </div>
           <WaButton href={link}>Pesan</WaButton>
@@ -291,7 +310,7 @@ function Preview({ order }: { order: Order }) {
   const withPhoto = framed && order.frame === "frame_photo";
   const frameHex = FRAME_COLORS[order.frameColor].hex;
   const pieceSize = order.product === "ganci" ? 290 : framed ? (withPhoto ? 128 : 160) : 300 * (SIZE_CM[order.size] / 15);
-  const cx = withPhoto ? 128 : 200;
+  const cx = withPhoto ? 272 : 200; // frame + foto: photo on the left, piece on the right
 
   return (
     <figure>
@@ -303,7 +322,7 @@ function Preview({ order }: { order: Order }) {
           </filter>
         </defs>
         {framed && (withPhoto ? <FrameBox x={24} y={86} w={352} h={228} hex={frameHex} /> : <FrameBox x={70} y={70} w={260} h={260} hex={frameHex} />)}
-        {withPhoto && <PhotoSlot x={230} y={124} w={118} h={152} />}
+        {withPhoto && <PhotoSlot x={52} y={124} w={118} h={152} />}
         <Piece order={order} base={COLORS[base].hex} route={COLORS[route].hex} cx={cx} cy={200} size={pieceSize} />
       </svg>
       <figcaption className="border-t border-sand/60 bg-warm-white px-5 py-3 text-xs text-bark-light/70">
@@ -340,6 +359,19 @@ function Examples({ photos, chosen, onPick }: { photos: Photo[]; chosen: Photo |
   );
 }
 
+// The flat border a titled piece gets, as on T07/F23 and the puzzle (P01), in fractions of the piece size:
+// inset scale k, inset shift dy, then [y, room] for the title and stats rows. Flat tops put the title in the top band and stats
+// in the bottom one; a triangle or pentagon has no room at its point, so its inset moves up and both rows go underneath.
+const BORDER: Record<ShapeId, { k: number; dy: number; title: [number, number]; stats: [number, number] }> = {
+  rect: { k: 0.76, dy: 0, title: [-0.44, 0.8], stats: [0.44, 0.8] },
+  rounded: { k: 0.76, dy: 0, title: [-0.44, 0.7], stats: [0.44, 0.7] },
+  circle: { k: 0.76, dy: 0, title: [-0.44, 0.9], stats: [0.44, 0.9] }, // room along the arc: the text bends with the border
+  hexagon: { k: 0.76, dy: 0, title: [-0.381, 0.5], stats: [0.381, 0.5] },
+  octagon: { k: 0.76, dy: 0, title: [-0.407, 0.45], stats: [0.407, 0.45] },
+  triangle: { k: 0.7, dy: -0.055, title: [0.235, 0.6], stats: [0.305, 0.66] },
+  pentagon: { k: 0.72, dy: -0.037, title: [0.295, 0.5], stats: [0.36, 0.5] },
+};
+
 function Piece({ order, base, route, cx, cy, size }: { order: Order; base: string; route: string; cx: number; cy: number; size: number }) {
   const isCard = order.product === "ganci";
   const shape: ShapeId = shapeOf(order) ?? "rect";
@@ -347,35 +379,63 @@ function Piece({ order, base, route, cx, cy, size }: { order: Order; base: strin
   const h = isCard ? size * (54 / 85) : size;
   const d = isCard ? rectPath(cx - w / 2, cy - h / 2, w, h, w * 0.06) : shapePath(shape, cx, cy, size);
   const thick = Math.max(4, size * 0.035);
+  // With a title or stats, the surface (relief, streets or puzzle, plus the route) sits in an inset and the text goes on the border.
+  const hasText = !isCard && !!(order.title.trim() || order.stats.trim());
+  const border = BORDER[shape];
+  const icy = hasText ? cy + border.dy * size : cy;
+  const is = hasText ? size * border.k : size;
+  const dIn = hasText ? shapePath(shape, cx, icy, is) : d;
   // route box: smaller inside a triangle, and nudged down to its wider half
-  const box = shape === "triangle" && !isCard ? size * 0.42 : isCard ? h * 0.62 : size * 0.6;
+  const box = shape === "triangle" && !isCard ? is * 0.42 : isCard ? h * 0.62 : is * 0.6;
   const rx = isCard ? cx + w * 0.05 - box * 0.7 : cx - box / 2; // card: route nudged right, clear of the hole
-  const ry = cy - box / 2 + (shape === "triangle" && !isCard ? size * 0.12 : 0);
+  const ry = icy - box / 2 + (shape === "triangle" && !isCard ? is * 0.12 : 0);
   const routePts = ROUTE.map(([x, y]) => `${(rx + x * box * (isCard ? 1.3 : 1)).toFixed(1)},${(ry + y * box).toFixed(1)}`).join(" ");
   const [sx, sy] = routePts.split(" ")[0].split(",").map(Number);
   const [fx, fy] = routePts.split(" ").at(-1)!.split(",").map(Number);
   const lineW = Math.max(2.5, size * 0.022);
   const clip = `pesan-clip-${order.product}`;
+  // Text in the route colour. [y, room] per row, room = the width the text may take. The card's title runs along its long edge (F12).
+  const [titleRow, statsRow]: [number, number][] = isCard
+    ? [[cy + h * 0.4, w * 0.5], [cy - h * 0.36, w * 0.5]]
+    : [[cy + border.title[0] * size, border.title[1] * size], [cy + border.stats[0] * size, border.stats[1] * size]];
+  // Circle: the text follows the border, the title over the top and the stats under the bottom, both reading left to right.
+  const curved = hasText && shape === "circle";
+  const R = size * 0.44;
+  const arc = (sweep: number) => `M${cx - R} ${cy}A${R} ${R} 0 0 ${sweep} ${cx + R} ${cy}`;
 
   return (
     <g>
       <defs>
-        <clipPath id={clip}><path d={d} /></clipPath>
+        <clipPath id={clip}><path d={dIn} /></clipPath>
+        {curved && <path id={`${clip}-t0`} d={arc(1)} />}
+        {curved && <path id={`${clip}-t1`} d={arc(0)} />}
       </defs>
       <g filter="url(#pesan-shadow)">
         <path d={d} transform={`translate(0 ${thick})`} fill={mix(base, "#000000", 0.32)} />
         <path d={d} fill={base} stroke="rgba(0,0,0,0.08)" />
       </g>
+      {hasText && <path d={dIn} transform={`translate(0 ${thick * 0.4})`} fill={mix(base, "#000000", 0.3)} />}
+      {hasText && <path d={dIn} fill={base} stroke={tone(base)} strokeWidth={1.5} />}
       <g clipPath={`url(#${clip})`}>
-        {order.product === "terrain" && <Contours cx={cx} cy={cy} size={size} base={base} />}
-        {order.product === "plakat" && <Streets cx={cx} cy={cy} size={size} base={base} />}
-        {order.product === "puzzle" && <Jigsaw cx={cx} cy={cy} size={size} base={base} />}
+        {order.product === "terrain" && <Contours cx={cx} cy={icy} size={is} base={base} />}
+        {order.product === "plakat" && <Streets cx={cx} cy={icy} size={is} base={base} />}
+        {order.product === "puzzle" && <Jigsaw cx={cx} cy={icy} size={is} base={base} />}
         {/* keychain hole: top left, as on the real cards (F13) */}
         {isCard && <circle cx={cx - w / 2 + w * 0.09} cy={cy - h / 2 + w * 0.09} r={w * 0.035} fill={mix(base, "#000000", 0.35)} />}
         <polyline points={routePts} fill="none" stroke={route} strokeWidth={lineW} strokeLinejoin="round" strokeLinecap="round" />
         <circle cx={sx} cy={sy} r={lineW * 1.4} fill={route} />
         <circle cx={fx} cy={fy} r={lineW * 1.4} fill="none" stroke={route} strokeWidth={lineW * 0.7} />
       </g>
+      {([[order.title, titleRow], [order.stats, statsRow]] as const).map(([t, [y, room]], i) => {
+        if (!t.trim()) return null;
+        const label = t.trim().toUpperCase();
+        const style = { textAnchor: "middle", dominantBaseline: "middle", fill: route, fontWeight: 600, letterSpacing: "0.08em", fontSize: Math.min(size * 0.048, room / (label.length * 0.68)) } as const;
+        return curved ? (
+          <text key={i} {...style}><textPath href={`#${clip}-t${i}`} startOffset="50%">{label}</textPath></text>
+        ) : (
+          <text key={i} x={cx} y={y} {...style}>{label}</text>
+        );
+      })}
     </g>
   );
 }
@@ -430,7 +490,8 @@ function FrameBox({ x, y, w, h, hex }: { x: number; y: number; w: number; h: num
   const b = 16;
   return (
     <g>
-      <rect x={x} y={y} width={w} height={h} fill={hex} filter="url(#pesan-shadow)" />
+      {/* outer corners rounded like the real wooden frames (F23, F24); the opening stays square */}
+      <rect x={x} y={y} width={w} height={h} rx={b * 1.4} fill={hex} filter="url(#pesan-shadow)" />
       <rect x={x + b} y={y + b} width={w - 2 * b} height={h - 2 * b} fill={mix(hex, "#000000", 0.28)} />
       <rect x={x + b + 2} y={y + b + 3} width={w - 2 * b - 2} height={h - 2 * b - 3} fill={MAT} />
     </g>
